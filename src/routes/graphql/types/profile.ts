@@ -1,13 +1,13 @@
 import { GraphQLObjectType, GraphQLBoolean, GraphQLInt, GraphQLString, GraphQLList } from "graphql";
 import { UserType } from "./user.js";
 import { UUIDType } from "./uuid.js";
-import { MemberTypeId } from "./member.js";
+import { MemberTypeEnum } from "./member.js";
 
 export interface IProfileType {
   isMale: boolean;
   yearOfBirth: number;
   userId: string;
-  memberTypeId: MemberTypeId;
+  memberTypeId: MemberTypeEnum;
 }
 
 
