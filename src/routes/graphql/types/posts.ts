@@ -1,10 +1,5 @@
-import {
-  GraphQLList,
-  GraphQLObjectType,
-  GraphQLString
-} from 'graphql';
+import { GraphQLList, GraphQLObjectType, GraphQLString } from 'graphql';
 import { UUIDType } from './uuid.js';
-
 
 export const PostType = new GraphQLObjectType({
   name: 'PostType',
@@ -29,7 +24,7 @@ export const PostTypeQueries = {
     args: { id: { type: UUIDType } },
     resolve: async (root, args, context, info) => {
       const { dataBase } = context;
-      await dataBase.post.findUnique({ where: { id: args.id } });
+      return await dataBase.post.findUnique({ where: { id: args.id } });
     },
   },
 };

@@ -1,7 +1,7 @@
 import { GraphQLObjectType, GraphQLBoolean, GraphQLInt, GraphQLString, GraphQLList } from "graphql";
 import { UserType } from "./user.js";
 import { UUIDType } from "./uuid.js";
-import { MemberTypeEnum } from "./member.js";
+import { MemberType, MemberTypeEnum } from "./member.js";
 
 export interface IProfileType {
   isMale: boolean;
@@ -25,6 +25,13 @@ export const ProfileType = new GraphQLObjectType({
         resolve: async (root, args, context, info) => {
           const {dataBase} = context;
           return await dataBase.user.findUnique({ where: { id: root.userId } })
+        },
+      },
+      memberType: {
+        type: MemberType,
+        resolve: async (root, args, context, info) => {
+          const {dataBase} = context;
+          return await dataBase.memberType.findUnique({ where: { id: root.memberTypeId } })
         },
       }
     })

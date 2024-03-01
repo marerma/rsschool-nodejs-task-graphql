@@ -41,7 +41,7 @@ export const MemberTypeQueries = {
     args: { id: { type: MemberTypeIdEnum } },
     resolve: async (root, args, context, info) => {
       const { dataBase } = context;
-      await dataBase.memberType.findUnique({ where: { id: args.id } });
+      return await dataBase.memberType.findUnique({ where: { id: args.id } });
     },
   },
 };

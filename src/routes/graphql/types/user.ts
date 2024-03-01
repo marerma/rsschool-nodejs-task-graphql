@@ -69,7 +69,7 @@ export const UserType = new GraphQLObjectType({
             where: {
               subscribedToUser: {
                 some: {
-                  subscriberId: root.userId,
+                  subscriberId: root.id,
                 },
               },
             },
