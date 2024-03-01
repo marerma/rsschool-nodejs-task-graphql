@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLBoolean, GraphQLInt, GraphQLString, GraphQLList } from "graphql";
+import { GraphQLObjectType, GraphQLBoolean, GraphQLInt, GraphQLString, GraphQLList, GraphQLInputObjectType, GraphQLNonNull } from "graphql";
 import { UserType } from "./user.js";
 import { UUIDType } from "./uuid.js";
 import { MemberType, MemberTypeEnum } from "./member.js";
@@ -55,3 +55,70 @@ export const ProfileQueries = {
     }
   },
 }
+
+
+const CreateProfileInput = new GraphQLInputObjectType({
+  name: 'CreateProfileInput',
+  fields: () => ({
+    isMale: {type: GraphQLBoolean},
+    yearOfBirth: {type: GraphQLInt},
+    userId: {type: UUIDType},
+    memberTypeId: {type: GraphQLString},
+  }),
+});
+
+const ChangeProfileInput = new GraphQLInputObjectType({
+  name: 'ChangeProfileInput',
+  fields: () => ({
+    isMale: {type: GraphQLBoolean},
+    yearOfBirth: {type: GraphQLInt},
+    memberTypeId: {type: GraphQLString},
+  }),
+});
+
+export const ProfileMutations = {
+  createProfile: {
+    type: ProfileType,
+    args: {
+      dto: {
+        type: new GraphQLNonNull(CreateProfileInput),
+      },
+    },
+    resolve: async (root, args, context, info) => {
+      const { dataBase } = context;
+      return await dataBase.profile.create({
+        data: args.dto,
+      });
+    },
+  },
+  changeProfile: {
+    type: ProfileType,
+    args: {
+      id: { type: UUIDType },
+      dto: {
+        type: new GraphQLNonNull(ChangeProfileInput),
+      },
+    },
+    resolve: async (root, args, context, info) => {
+      const { dataBase } = context;
+      return await dataBase.profile.update({
+        where: { id: args.id },
+        data: args.dto,
+      });
+    },
+  },
+  deleteProfile: {
+    type: GraphQLString,
+    args: {
+      id: { type: UUIDType },
+    },
+    resolve: async (root, args, context, info) => {
+      const { dataBase } = context;
+      await dataBase.profile.delete({
+        where: {
+          id: args.id,
+        },
+      });
+    },
+  },
+};

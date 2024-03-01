@@ -146,13 +146,13 @@ export const UserMutations = {
     },
   },
   deleteUser: {
-    type: GraphQLBoolean,
+    type: GraphQLString,
     args: {
       id: { type: UUIDType },
     },
     resolve: async (root, args, context, info) => {
       const { dataBase } = context;
-      return await dataBase.user.delete({
+      await dataBase.user.delete({
         where: {
           id: args.id,
         },
@@ -173,6 +173,26 @@ export const UserMutations = {
         data: {
           userSubscribedTo: {
             create: {
+              authorId: args.authorId,
+            },
+          },
+        },
+      });
+    },
+  },
+  unsubscribeFrom: {
+    type: GraphQLString,
+    args: {
+      userId: { type: UUIDType },
+      authorId: { type: UUIDType },
+    },
+    resolve: async (root, args, context, info) => {
+      const { dataBase } = context;
+      await dataBase.user.update({
+        where: { id: args.userId },
+        data: {
+          userSubscribedTo: {
+            deleteMany: {
               authorId: args.authorId,
             },
           },
