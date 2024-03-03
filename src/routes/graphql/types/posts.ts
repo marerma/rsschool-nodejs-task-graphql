@@ -1,11 +1,13 @@
+import { PrismaClient } from '@prisma/client';
+import DataLoader from 'dataloader';
 import {
-  GraphQLBoolean,
   GraphQLInputObjectType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
+  GraphQLString
 } from 'graphql';
+import { ContextType } from './context.js';
 import { UUIDType } from './uuid.js';
 
 export const PostType = new GraphQLObjectType({
@@ -21,7 +23,7 @@ export const PostType = new GraphQLObjectType({
 export const PostTypeQueries = {
   posts: {
     type: new GraphQLList(PostType),
-    resolve: async (root, args, context, info) => {
+    resolve: async (_, _args, context: ContextType) => {
       const { dataBase } = context;
       return await dataBase.post.findMany();
     },
@@ -29,7 +31,7 @@ export const PostTypeQueries = {
   post: {
     type: PostType,
     args: { id: { type: UUIDType } },
-    resolve: async (root, args, context, info) => {
+    resolve: async (_, args: { id: string }, context: ContextType) => {
       const { dataBase } = context;
       return await dataBase.post.findUnique({ where: { id: args.id } });
     },
@@ -53,6 +55,14 @@ const ChangePostInput = new GraphQLInputObjectType({
   }),
 });
 
+type ChangePostBody = {
+  dto: {
+    content: string;
+    title: string;
+    authorId: string;
+  };
+};
+
 export const PostMutations = {
   createPost: {
     type: PostType,
@@ -61,7 +71,7 @@ export const PostMutations = {
         type: new GraphQLNonNull(CreatePostInput),
       },
     },
-    resolve: async (root, args, context, info) => {
+    resolve: async (root, args: ChangePostBody, context: ContextType) => {
       const { dataBase } = context;
       return await dataBase.post.create({
         data: args.dto,
@@ -76,7 +86,11 @@ export const PostMutations = {
         type: new GraphQLNonNull(ChangePostInput),
       },
     },
-    resolve: async (root, args, context, info) => {
+    resolve: async (
+      _,
+      args: Omit<ChangePostBody, 'authorId'> & { id: string },
+      context: ContextType,
+    ) => {
       const { dataBase } = context;
       return await dataBase.post.update({
         where: { id: args.id },
@@ -89,7 +103,7 @@ export const PostMutations = {
     args: {
       id: { type: UUIDType },
     },
-    resolve: async (root, args, context, info) => {
+    resolve: async (_, args: { id: string }, context: ContextType) => {
       const { dataBase } = context;
       await dataBase.post.delete({
         where: {
@@ -98,4 +112,20 @@ export const PostMutations = {
       });
     },
   },
+};
+
+export const postDataLoader = (dataBase: PrismaClient) => {
+  return new DataLoader(async (keys: readonly string[]) => {
+    const posts = await dataBase.post.findMany({
+      where: {
+        authorId: {
+          in: keys as string[],
+        },
+      },
+    });
+    return keys.map((id) => {
+      const item = posts.find((p) => p.authorId === id);
+      return item ? [item] : [];
+    });
+  });
 };

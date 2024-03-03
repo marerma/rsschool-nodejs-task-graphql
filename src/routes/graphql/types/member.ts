@@ -1,3 +1,5 @@
+import { PrismaClient } from '@prisma/client';
+import DataLoader from 'dataloader';
 import {
   GraphQLEnumType,
   GraphQLFloat,
@@ -5,11 +7,12 @@ import {
   GraphQLList,
   GraphQLObjectType,
 } from 'graphql';
+import { ContextType } from './context.js';
 
 export const enum MemberTypeEnum {
   business = 'business',
   basic = 'basic',
-} 
+}
 
 export const MemberTypeIdEnum = new GraphQLEnumType({
   name: 'MemberTypeId',
@@ -31,7 +34,7 @@ export const MemberType = new GraphQLObjectType({
 export const MemberTypeQueries = {
   memberTypes: {
     type: new GraphQLList(MemberType),
-    resolve: async (root, args, context, info) => {
+    resolve: async (_, _args, context: ContextType) => {
       const { dataBase } = context;
       return await dataBase.memberType.findMany();
     },
@@ -39,9 +42,24 @@ export const MemberTypeQueries = {
   memberType: {
     type: MemberType,
     args: { id: { type: MemberTypeIdEnum } },
-    resolve: async (root, args, context, info) => {
+    resolve: async (_, args: { id: string }, context: ContextType) => {
       const { dataBase } = context;
+
       return await dataBase.memberType.findUnique({ where: { id: args.id } });
     },
   },
+};
+
+export const memberTypeDataLoader = (dataBase: PrismaClient) => {
+  return new DataLoader(async (keys: readonly string[]) => {
+    const memberTypes = await dataBase.memberType.findMany({
+      where: {
+        id: {
+          in: keys as string[],
+        },
+      },
+    });
+
+    return keys.map((id) => memberTypes.find((p) => p.id === id));
+  });
 };
